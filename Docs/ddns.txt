@@ -1,0 +1,4 @@
+username: gl8517
+site: no-ip.com
+host: home-control.ddns.net
+update example: url="http://$NOIPuser:$NOIPPass@dynupdate.no-ip.com/nic/update\3Fhostname=$NOIPDomain&myip=$NewIP" keep-result=no"

@@ -1,0 +1,24 @@
+sudo nano /etc/modules
+i2c-bcm2708
+i2c-dev
+rtc-ds1307
+
+sudo nano /etc/modprobe.d/raspi-blacklist.conf
+
+sudo apt-get install i2c-tools
+sudo i2cdetect -y 1
+
+RTC
+sudo -s
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+exit
+sudo hwclock –r
+
+sudo nano/etc/rc.local
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device
+sudo hwclock –s
+
+sudo reboot
+
+BMP085
+http://electromost.com/news/raspberry_pi_dlja_domashnej_avtomatizacii_podkljuchenie_datchikov_po_shine_i2c/2015-09-02-133
