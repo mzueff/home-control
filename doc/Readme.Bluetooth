@@ -1,0 +1,27 @@
+sudo apt-get install bluetooth bluez blueman python-gobject
+
+sudo reboot
+
+Проверяем наличие Blootooth донгла:
+hcitool dev
+
+Сканируем все USB устройства и списываем MAC адрес донгла:
+hcitool scan
+
+Спариваем устройство и raspberry pi. 
+Вместо MAC_ADDRESS впишите адрес с предыдущего шага. 
+bluez-simple-agent hci0 MAC_ADDRESS
+или
+bluetoothctl hci0 MAC_ADDRESS
+[bluetooth]# agent on
+[bluetooth]# pair 50:F5:20:BF:54:50
+[bluetooth]# trust 50:F5:20:BF:54:50
+
+
+
+Делаем устройство доверенным:
+bluez-test-device trusted MAC_ADDRESS yes
+или
+
+Устанавливаем соединение:
+bluez-test-input connect MAC_ADDRESS
