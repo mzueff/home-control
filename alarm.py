@@ -5,7 +5,7 @@ import logging
 import MySQLdb
 import time
 import threading
-from datetime import datetimefrom datetime import datetime
+from datetime import datetime
 
 logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.INFO, filename = u'/home/pi/alarm.log')
 import RPIO # Импортируем библиотеку RPIO
@@ -36,7 +36,7 @@ def send_sms(gpio_id, value):
 		if (mw_wait == 1):
 		    # Если да, шлем СМС
 		    sql = "INSERT INTO outbox ( DestinationNumber, TextDecoded, CreatorID, Coding, DeliveryReport) \
-			    VALUES ( '+79049155555', '%s Открыта входная дверь!\nЗафиксированно движение через %s сек.', 'Program', 'Unicode_No_Compression', 'yes');" % (str(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")),counter)
+			    VALUES ( '+79049155555', '%s Открыта входная дверь!\nЗафиксированно движение через %s сек.', 'Program', 'Unicode_No_Compression', 'yes');" % (str(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")),counter)
 		    
 		    cursor.execute(sql)
 		    db.commit()

@@ -1,0 +1,17 @@
+[gammu]
+port = /dev/ttyUSB0
+connection = at
+
+[smsd]
+#Сервер базы данных
+service = sql
+driver=native_mysql
+host = localhost
+logfile = /var/log/gammu-smsd
+#Пользователь базы
+user = root
+password = Goldwing8517
+#Адрес сервера базы данных
+pc = localhost
+#Имя базы
+database = smsd
