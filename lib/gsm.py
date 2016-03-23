@@ -36,7 +36,7 @@ class sms:
 
 	    log_msg = ' '.join(' '.join(ser.readlines()).split())
 	    #logging.debug(log_msg)
-	
+	    print log_msg
 	    ser.close()
 	    return True, log_msg
 
@@ -60,6 +60,7 @@ class sms:
 	    ser.write('AT+CMGL="ALL"\r')
 	    
 	    all_msgs =  ser.readlines()
+	    print all_msgs
 	    decode_msgs = []
 	    for s in all_msgs:
 		hexapattern = r'([0-9a-fA-F]+)(?:--)?'
@@ -70,7 +71,10 @@ class sms:
 		if (msg.find('AT+') < 0 or msg.find('AT+') is None):
 		    decode_msgs.append(msg)
 	    msg_arr = {}
+	    msg_num_old = -1
+	    msg_num = -1
 	    for line in decode_msgs:
+		#print "LINE", line.find('+CMGL:'), line
 		if (line == 'OK'):
 		    continue
 		if (line.find('+CMGL:') == 0):
@@ -79,9 +83,9 @@ class sms:
 		    msg_date= "%s %s" % (str(line[4]), str(line[5]))
 		    msg_from= str(line[2])
 		    line=''
-		if (len(line) > 0):
+		if (len(line) > 0 and msg_num > msg_num_old):
+		    msg_num_old = msg_num
 		    msg_arr[msg_num] = {'date' : msg_date, 'phone' : msg_from, 'text' : line}
-	    
 	    return True, msg_arr
 	
 	except Exception, e:
@@ -93,16 +97,17 @@ class sms:
     def del_all(self):
 	msgs = self.recv()	    	
 	if (msgs[0] is True):
-	    for num,msg in msgs[1].items():
-		try:
-		    ser = serial.Serial(self.device, timeout=1)
-	    	    # Переведем модем в режим СМС
-		    ser.write('AT+CMGF=%d\r' % 1)
+	    try:
+		ser = serial.Serial(self.device, timeout=1)
+	    	# Переведем модем в режим СМС
+		ser.write('AT+CMGF=%d\r' % 1)
 
-		except Exception, e:
-	    	    log_msg = "ERROR open port: %s. MSG: %s" % (str(self.device), str(e))
-	    	    return False, log_msg
+	    except Exception, e:
+	        log_msg = "ERROR open port: %s. MSG: %s" % (str(self.device), str(e))
+	        return False, log_msg
 		
+	    for num,msg in msgs[1].items():
+		print "DEBUG: Delete message № %s" % num
 	        try:
 		    # Удалим текущее сообщение
 		    ser.write('AT+CMGD=%d\r\n\r\n' % int(num))
@@ -112,7 +117,8 @@ class sms:
 		    ser.close()
 		    return False, log_msg
 		print "DEBUG:",ser.readlines()
-		ser.close()
+	    
+	    ser.close()
 	return True
 	
     def get_balance(self):
@@ -123,14 +129,14 @@ class sms:
 	    return False, log_msg
 	try:
 	    if (self.send(__main__.cfg['contacts']['get_balance'],__main__.cfg['text']['get_balance'])[0] is False):
-		raise
+		raise NameError('sms.send() return False!')
 	except Exception, e:
 	    return False, "Error Send sms: %s" % str(e)
 	balance_arr = {}
 	balance = -99999
 	try:
 	    msgs = self.recv()
-	    if (msgs[0] is True):
+	    if (msgs[0] is True and len(msgs[1]) > 0):
 		for num,msg in msgs[1].items():
 		    if (msg['text'].find(u'аланс') >= 0):
 			msg_tmp =  msg['text'].split('.')
@@ -139,7 +145,7 @@ class sms:
 				balance= "%s.%s" % (self.d.sub('',msg_part.split(',')[0]),self.d.sub('',msg_part.split(',')[1]))
 				date = datetime.strptime(msg['date'].replace('"','')[:-3], '%y/%m/%d %H:%M:%S')
 				balance_arr[num] = {'date':date, 'balance':balance}
-	    mix_date = 0
+	    max_date = 0
 	    try:
 		for num,data in balance_arr.items():
 		    if (mix_date == 0):
@@ -149,7 +155,8 @@ class sms:
 			balance = data['balance']
 		return True, balance, max_date
 	    except Exception, e:
-		log_msg = "ERROR parse SMS: %s" %str(e)	
+		log_msg = "ERROR parse SMS: %s\n%s" %(str(e), msgs)
+
 		return False, log_msg
 
 	except Exception,e:

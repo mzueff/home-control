@@ -64,10 +64,8 @@ sms = gsm.sms() # Экземпляр класса работы с SMS
 # Если пришло: -99999
 # Значит ошибка при работе с модемом.
 #
-msgs = sms.recv()
 
-for num, data in msgs[1].items():
-    print num, data['text']
+#print sms.del_all()
 
 balance = sms.get_balance()
 
@@ -75,4 +73,3 @@ if (balance[0] is True and balance[1] != -99999):
     print "%s - %sруб." % (str(balance[2]),str(balance[1]))
 else:
     print "Error",balance
-

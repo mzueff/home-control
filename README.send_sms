@@ -1,0 +1,14 @@
+INSERT INTO outbox (
+ DestinationNumber,
+ TextDecoded,
+ CreatorID,
+ Coding,
+ DeliveryReport
+)
+VALUES (
+ '+7908*******',
+ 'Текст сообщения!',
+ 'Program',
+ 'Unicode_No_Compression',
+ 'yes'
+);
