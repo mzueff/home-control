@@ -7,7 +7,7 @@ import time
 import threading
 from datetime import datetime
 
-logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.INFO, filename = u'/home/pi/alarm.log')
+logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(filename)s:%(lineno)d %(message)s', level = logging.INFO, filename = u'/home/pi/alarm.log')
 import RPIO # Импортируем библиотеку RPIO
 import serial
 
@@ -22,7 +22,7 @@ def send_sms(gpio_id, value):
 	logging.info(u'Открыта входная дверь!')
 	try:
 	    # подключаемся к базе данных (не забываем указать кодировку, а то в базу запишутся иероглифы)
-	    db = MySQLdb.connect(host="localhost", user="***", passwd="***", db="smsd", charset='utf8')
+	    db = MySQLdb.connect(host="localhost", user="****", passwd="****", db="****", charset='utf8')
     
 	    # формируем курсор, с помощью которого можно исполнять SQL-запросы
 	    cursor = db.cursor()
@@ -35,18 +35,36 @@ def send_sms(gpio_id, value):
 		# Проверяем флаг датчика движения
 		if (mw_wait == 1):
 		    # Если да, шлем СМС
-		    sql = "INSERT INTO outbox ( DestinationNumber, TextDecoded, CreatorID, Coding, DeliveryReport) \
-			    VALUES ( '+79049155555', '%s Открыта входная дверь!\nЗафиксированно движение через %s сек.', 'Program', 'Unicode_No_Compression', 'yes');" % (str(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M:%S")),counter)
-		    
+		    # Сначала прочитаем полученный баланс
+		    sql = u"select ID,TextDecoded from inbox where TextDecoded like '%баланс:%' order by 1 DESC;"
+		    cursor.execute(sql)
+		    row = cursor.fetchone()
+
+		    cursor.close()
+		    cursor = db.cursor()
+
+		    balance =  row[1].split(' ')[2]
+		    log_msg = u'Движение через %s сек.' % counter
+		    logging.info(log_msg)    		    
+		    log_msg = u'Баланс: %s руб.' % balance
+		    logging.info(log_msg)    		    
+		    # Отправим аларм и баланс
+		    sql = u"INSERT INTO outbox ( DestinationNumber, TextDecoded, CreatorID, Coding, DeliveryReport) \
+			    VALUES ( '+7**********', '%s Открыта дверь\nДвижение через %s сек.\n%sруб.', 'Program', 'Unicode_No_Compression', 'yes');" % (str(datetime.strftime(datetime.now(), "%Y.%m.%d %H:%M")),counter, balance)
 		    cursor.execute(sql)
 		    db.commit()
+		    # Заодно запросим баланс
+		    sql = u"INSERT INTO outbox ( DestinationNumber, TextDecoded, CreatorID, Coding, DeliveryReport) \
+			    VALUES ( '111', '11','Program', 'Unicode_No_Compression', 'yes');"
+
+		    cursor.execute(sql)
+		    db.commit()
+
 		    mw_wait = 0
-		    log_msg = u'Движение зафиксированно через %s секунд!' % counter
-		    logging.info(log_msg)
 		    msg = "mw_wait %s" % str(mw_wait)
 		    logging.debug(msg)
 		    break
-		logging.debug(str(counter))
+		#logging.debug(str(counter))
 		time.sleep(1)
 		counter += 1
 	
@@ -54,7 +72,7 @@ def send_sms(gpio_id, value):
 	    if (counter >= 60):
 		print counter, "Timeout"
 		sql = "INSERT INTO outbox ( DestinationNumber, TextDecoded, CreatorID, Coding, DeliveryReport) \
-		    VALUES ( '+79049155555', 'Открыта входная дверь!', 'Program', 'Unicode_No_Compression', 'yes');"
+		    VALUES ( '+7**********', 'Открыта дверь!', 'Program', 'Unicode_No_Compression', 'yes');"
 		# cursor.execute(sql)
 		# db.commit()
 
